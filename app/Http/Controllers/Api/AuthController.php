@@ -15,7 +15,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'phone' => 'required|digits:10|unique:users',
+            'phone' => 'required|digits:10',
             'password' => 'required|confirmed|min:6',
         ]);
 
@@ -23,18 +23,26 @@ class AuthController extends Controller
             return apiResponse(false, 'Validation Errors', $validator->errors(), 422);
         }
 
-        // $otp = rand(100000, 999999);
-        $otp = 1234;
+        // Generate OTP
+        $otp = 1234; // or use rand(100000, 999999)
 
-        $user = User::create([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'otp' => $otp,
-            'password' => $request->password, // set later
-        ]);
+        $user = User::where('phone', $request->phone)->first();
 
-        $user->assignRole('User');
+        if ($user) {
+            // Update OTP for existing user
+            $user->otp = $otp;
+            $user->save();
+        } else {
+            // Create new user
+            $user = User::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'otp' => $otp,
+                'password' => $request->password,
+            ]);
 
+            $user->assignRole('User');
+        }
 
         // SendSms($request->phone, "Your OTP is $otp");
 
@@ -107,6 +115,32 @@ class AuthController extends Controller
 
         return apiResponse(true, 'Login successful', $data, 200);
     }
+
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|digits:10|exists:users,phone',
+        ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validation Errors', $validator->errors(), 422);
+        }
+
+        // Find user
+        $user = User::where('phone', $request->phone)->first();
+
+        // Generate new OTP
+        $otp = 1234; // or use rand(100000, 999999)
+
+        $user->otp = $otp;
+        $user->save();
+
+        // Optionally send SMS
+        // SendSms($user->phone, "Your new OTP is $otp");
+
+        return apiResponse(true, 'OTP resent successfully.', null, 200);
+    }
+
 
     public function sendOtpForForgotPassword(Request $request)
     {
@@ -265,6 +299,13 @@ class AuthController extends Controller
         $user->profile_image = $user->profile_image ? asset('storage/' . $user->profile_image) : null;
 
         return apiResponse(true, 'Profile updated successfully.', $user, 200);
+    }
+
+    public function get_profile(Request $request){
+        $user = $request->user();
+        $user->profile_image = $user->profile_image ? asset('storage/' . $user->profile_image) : null;
+
+        return apiResponse(true, 'Profile get successfully.', $user, 200);
     }
 
 }

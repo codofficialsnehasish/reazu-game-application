@@ -23,6 +23,18 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\FileUpload::make('profile_image')
+                    ->label('Profile Image')
+                    ->image()
+                    ->directory('profiles') // This will store in storage/app/public/profiles
+                    ->imageEditor()
+                    ->downloadable()
+                    ->openable()
+                    ->previewable()
+                    ->imagePreviewHeight('100')
+                    ->imageResizeTargetWidth('200')
+                    ->imageResizeTargetHeight('200'),
+
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -53,6 +65,11 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('profile_image')
+                    ->label('Avatar')
+                    ->defaultImageUrl(url('/images/default-avatar.png')) // Add path to your dummy image
+                    ->circular(),
+
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),

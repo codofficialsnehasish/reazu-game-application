@@ -82,10 +82,19 @@ class GameApiController extends Controller
             'score' => $request->score
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Point saved successfully.',
-            'data' => $point,
+        return apiResponse(true, 'Point saved successfully.', $point, 200);
+    }
+
+    public function get_total_score_by_game(Request $request){
+        $validator = Validator::make($request->all(), [
+            'game_id' => 'required|exists:games,id',
         ]);
+
+        if ($validator->fails()) {
+            return apiResponse(false, 'Validation Errors', $validator->errors(), 422);
+        }
+        $total_point = Point::where('user_id',$request->user()->id)->where('game_id',$request->game_id)->sum('score');
+
+        return apiResponse(true, 'Total Score By Game.', ['total_point'=> $total_point], 200);
     }
 }
