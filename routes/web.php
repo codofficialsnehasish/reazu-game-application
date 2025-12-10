@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 //     return redirect(route('login'));
 // });
 
+use App\Http\Middleware\RedirectIfNotUser;
+
 Route::view('/', 'frontend.home')->name('home');
 Route::view('/terms-and-conditions', 'frontend.terms')->name('terms');
 Route::view('/privacy-policy', 'frontend.privacy')->name('privacy');
@@ -25,7 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/profile', [UserAuthController::class, 'profile'])->name('user.profile');
     Route::post('/user/profile', [UserAuthController::class, 'updateProfile'])->name('user.profile.update');
 
-    Route::delete('/user/delete', [UserAuthController::class, 'deleteAccount'])
+    Route::get('/user/delete', [UserAuthController::class, 'deleteAccount'])
         ->name('user.delete');
 
     Route::post('/user/logout', [UserAuthController::class, 'logout'])->name('user.logout');
